@@ -1,6 +1,6 @@
 library animated_accordion;
 
-import 'package:animated_accordion/extensions/context_extensions.dart';
+import 'package:animated_accordion/src/extensions/context_extensions.dart';
 import 'package:flutter/material.dart';
 
 /// A Flutter widget that provides an expandable, animated accordion

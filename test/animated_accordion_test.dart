@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:animated_accordion/animated_accordion.dart';
+import 'package:animated_accordion/src/animated_accordion.dart';
 
 void main() {
   test('adds one to input values', () {

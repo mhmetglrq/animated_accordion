@@ -15,7 +15,7 @@ The `animated_accordion` package provides an expandable, animated accordion with
 
 ### Video Demo
 
-![Demo GIF]("example/assets/gifs/example.gif")
+[![Demo GIF](example/assets/gifs/example.gif)]
 
 ### Image Examples
 

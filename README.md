@@ -15,13 +15,13 @@ The `animated_accordion` package provides an expandable, animated accordion with
 
 ### Video Demo
 
-[<img src="example/assets/videos/example_video.mp4"  />](Click Here To Watch Demo!)
+![Demo GIF]("example/assets/gifs/example.gif")
 
 ### Image Examples
 
 | Image Example        |
 |---------------------------------|
-| [<img src="example/assets/images/example_image.png"  />](example_image.png) | 
+| [<img src="example/assets/images/example_image.png" width="400" />](example_image.png) | 
 
 ## Usage
 

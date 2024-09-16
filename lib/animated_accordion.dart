@@ -1,7 +1,11 @@
 library animated_accordion;
 
-import 'package:animated_accordion/src/extensions/context_extensions.dart';
+import 'dart:ui';
+
+import 'package:animated_accordion/extensions/context_extensions.dart';
 import 'package:flutter/material.dart';
+
+import 'rotation_y_transition.dart';
 
 /// A Flutter widget that provides an expandable, animated accordion
 /// with customizable animation options like fade, scale, and slide.
@@ -25,19 +29,10 @@ import 'package:flutter/material.dart';
 /// The above code will create an accordion with sliding animations.
 class AnimatedAccordion extends StatefulWidget {
   /// The title displayed in the header section.
-  final String headerTitle;
+  final String? headerTitle;
 
-  /// A list of widgets to be displayed inside the expandable content area.
-  final List<Widget> contentWidgets;
-
-  /// The curve for the animation when the content opens.
-  final Curve contentOpenAnimationCurve;
-
-  /// The curve for the animation when the content closes.
-  final Curve contentCloseAnimationCurve;
-
-  /// The type of animation to be used for the content (fade, slide, or scale).
-  final AnimatedAccordionAnimationType contentAnimationType;
+  /// The padding for the header section.
+  final EdgeInsetsGeometry? headerPadding;
 
   /// An optional widget displayed at the end of the header (usually an icon or indicator).
   final Widget? headerTrailing;
@@ -57,9 +52,6 @@ class AnimatedAccordion extends StatefulWidget {
   /// A callback function triggered when the accordion expands or collapses.
   final Function(bool)? onExpansionChanged;
 
-  /// Padding for the content inside the accordion.
-  final EdgeInsetsGeometry? contentPadding;
-
   /// The background color of the tile.
   final Color? tileBackgroundColor;
 
@@ -74,9 +66,6 @@ class AnimatedAccordion extends StatefulWidget {
 
   /// The text color for the header title.
   final Color? headerTextColor;
-
-  /// The background color of the content area.
-  final Color? contentBackgroundColor;
 
   /// The elevation (shadow depth) when the tile is collapsed.
   final double? collapsedTileElevation;
@@ -93,12 +82,6 @@ class AnimatedAccordion extends StatefulWidget {
   /// The shape (e.g., rounded corners) of the header.
   final ShapeBorder? headerShape;
 
-  /// The shape (e.g., rounded corners) of the content area.
-  final ShapeBorder? contentShape;
-
-  /// Determines how content is clipped (e.g., inside borders).
-  final Clip clipBehavior;
-
   /// Custom styling for the header title (e.g., font size, weight).
   final TextStyle? headerTitleStyle;
 
@@ -107,6 +90,9 @@ class AnimatedAccordion extends StatefulWidget {
 
   /// The duration of the animation when expanding or collapsing.
   final Duration? animationDuration;
+
+  /// Determines how content is clipped (e.g., inside borders).
+  final Clip clipBehavior;
 
   /// Maintains the state of the content when collapsed.
   final bool maintainState;
@@ -120,40 +106,81 @@ class AnimatedAccordion extends StatefulWidget {
   /// Sets the height of the expanded content. If null, a default height is used.
   final double? contentHeight;
 
+  /// The gradient to be applied to the content area.
+  final Gradient? contentGradient;
+
+  /// The border for the content area.
+  final BoxBorder? contentBorder;
+
+  /// The image to be displayed in the content area.
+  final DecorationImage? contentImage;
+
+  /// The border radius for the content area.
+  final BorderRadius? contentBorderRadius;
+
+  /// The alignment of the content inside the content area.
+  final Alignment? contentAlignment;
+
+  /// A list of widgets to be displayed inside the expandable content area.
+  final List<Widget> contentWidgets;
+
+  /// The curve for the animation when the content opens.
+  final Curve contentOpenAnimationCurve;
+
+  /// The curve for the animation when the content closes.
+  final Curve contentCloseAnimationCurve;
+
+  /// The type of animation to be used for the content (fade, slide, or scale).
+  final AnimatedAccordionAnimationType contentAnimationType;
+
+  /// The background color of the content area.
+  final Color? contentBackgroundColor;
+
+  /// Padding for the content inside the accordion.
+  final EdgeInsetsGeometry? contentPadding;
+
+  /// The shape (e.g., rounded corners) of the content area.
+  final BoxShape? contentShape;
   const AnimatedAccordion({
     super.key,
-    required this.headerTitle,
+    this.headerTitle,
     required this.contentWidgets,
     this.contentOpenAnimationCurve = Curves.easeIn,
     this.contentCloseAnimationCurve = Curves.easeOut,
     this.contentAnimationType = AnimatedAccordionAnimationType.fade,
-    this.headerTrailing,
-    this.headerLeading,
-    this.expandedHeaderLeading,
-    this.headerCustomWidget,
-    this.isInitiallyExpanded = false,
-    this.onExpansionChanged,
     this.contentPadding,
     this.tileBackgroundColor,
     this.collapsedContentBackgroundColor,
     this.expandedContentBackgroundColor,
+    this.contentBackgroundColor,
+    this.contentShape,
+    this.contentHeight,
+    this.contentGradient,
+    this.contentBorder,
+    this.contentImage,
+    this.contentBorderRadius,
+    this.contentAlignment,
+    this.headerTrailing,
+    this.headerLeading,
+    this.headerPadding,
+    this.headerShape,
+    this.headerCustomWidget,
     this.headerBackgroundColor,
     this.headerTextColor = Colors.black,
-    this.contentBackgroundColor,
-    this.collapsedTileElevation,
-    this.expandedTileElevation,
     this.headerElevation = 2.0,
-    this.tileShape,
-    this.headerShape,
-    this.contentShape,
-    this.clipBehavior = Clip.none,
     this.headerTitleStyle,
     this.headerTextAlign = TextAlign.start,
+    this.expandedHeaderLeading,
+    this.isInitiallyExpanded = false,
+    this.onExpansionChanged,
+    this.collapsedTileElevation,
+    this.expandedTileElevation,
+    this.tileShape,
+    this.clipBehavior = Clip.none,
     this.animationDuration,
     this.maintainState = false,
     this.tilePaddingCollapsed = true,
     this.tilePaddingExpanded = true,
-    this.contentHeight,
   });
 
   @override
@@ -167,6 +194,10 @@ class _AnimatedAccordionState extends State<AnimatedAccordion>
   late List<Animation<double>> _fadeAnimations;
   late List<Animation<Offset>> _slideAnimations;
   late List<Animation<double>> _scaleAnimations;
+  late List<Animation<double>> _rotationAnimations;
+  late List<Animation<double>> _shrinkAnimations;
+  late List<Animation<double>> _bounceAnimations;
+  late List<Animation<double>> _blurAnimations;
 
   @override
   void initState() {
@@ -183,45 +214,6 @@ class _AnimatedAccordionState extends State<AnimatedAccordion>
     if (_isExpanded) {
       _controller.value = 1.0;
     }
-
-    /// Initialize fade animations for content items.
-    _fadeAnimations = List.generate(widget.contentWidgets.length, (index) {
-      double start = (index / widget.contentWidgets.length) * 0.5;
-      double end = start + 0.5;
-
-      return Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(
-          parent: _controller,
-          curve: Interval(start, end, curve: widget.contentOpenAnimationCurve),
-        ),
-      );
-    });
-
-    /// Initialize slide animations for content items.
-    _slideAnimations = List.generate(widget.contentWidgets.length, (index) {
-      double start = (index / widget.contentWidgets.length) * 0.5;
-      double end = start + 0.5;
-
-      return Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero).animate(
-        CurvedAnimation(
-          parent: _controller,
-          curve: Interval(start, end, curve: widget.contentOpenAnimationCurve),
-        ),
-      );
-    });
-
-    /// Initialize scale animations for content items.
-    _scaleAnimations = List.generate(widget.contentWidgets.length, (index) {
-      double start = (index / widget.contentWidgets.length) * 0.5;
-      double end = start + 0.5;
-
-      return Tween<double>(begin: 0.5, end: 1.0).animate(
-        CurvedAnimation(
-          parent: _controller,
-          curve: Interval(start, end, curve: widget.contentOpenAnimationCurve),
-        ),
-      );
-    });
   }
 
   @override
@@ -245,14 +237,97 @@ class _AnimatedAccordionState extends State<AnimatedAccordion>
     });
   }
 
+  /// Initializes animations dynamically based on the number of content widgets.
+  void _initializeAnimations() {
+    /// Fade Animations
+    _fadeAnimations = List.generate(widget.contentWidgets.length, (index) {
+      double start = (index / widget.contentWidgets.length) * 0.5;
+      double end = start + 0.5;
+
+      return Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(
+          parent: _controller,
+          curve: Interval(start, end, curve: widget.contentOpenAnimationCurve),
+        ),
+      );
+    });
+
+    /// Slide Animations
+    _slideAnimations = List.generate(widget.contentWidgets.length, (index) {
+      double start = (index / widget.contentWidgets.length) * 0.5;
+      double end = start + 0.5;
+
+      return Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero).animate(
+        CurvedAnimation(
+          parent: _controller,
+          curve: Interval(start, end, curve: widget.contentOpenAnimationCurve),
+        ),
+      );
+    });
+
+    /// Scale Animations
+    _scaleAnimations = List.generate(widget.contentWidgets.length, (index) {
+      double start = (index / widget.contentWidgets.length) * 0.5;
+      double end = start + 0.5;
+
+      return Tween<double>(begin: 0.5, end: 1.0).animate(
+        CurvedAnimation(
+          parent: _controller,
+          curve: Interval(start, end, curve: widget.contentOpenAnimationCurve),
+        ),
+      );
+    });
+
+    /// Rotate Animations
+    _rotationAnimations = List.generate(widget.contentWidgets.length, (index) {
+      double start = (index / widget.contentWidgets.length) * 0.5;
+      double end = start + 0.5;
+
+      return Tween<double>(begin: 1, end: 0).animate(
+        CurvedAnimation(
+          parent: _controller,
+          curve: Interval(start, end, curve: widget.contentOpenAnimationCurve),
+        ),
+      );
+    });
+
+    /// Bounce Animations
+    _bounceAnimations = List.generate(widget.contentWidgets.length, (index) {
+      return Tween<double>(begin: 0.5, end: 1.0).animate(
+        CurvedAnimation(
+          parent: _controller,
+          curve: Curves.bounceIn,
+        ),
+      );
+    });
+
+    /// Blur Animations
+    _blurAnimations = List.generate(widget.contentWidgets.length, (index) {
+      double start = (index / widget.contentWidgets.length) * 0.5;
+      double end = start + 0.5;
+
+      return Tween<double>(begin: 10.0, end: 0.0).animate(
+        CurvedAnimation(
+          parent: _controller,
+          curve: Interval(start, end, curve: widget.contentOpenAnimationCurve),
+        ),
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    _initializeAnimations();
     return Material(
       shape: widget.tileShape,
       elevation: _isExpanded
-          ? widget.expandedTileElevation ?? 2.0
+          ? widget.expandedTileElevation ?? 0.0
           : widget.collapsedTileElevation ?? 0.0,
       clipBehavior: widget.clipBehavior,
+      color: widget.tileBackgroundColor ?? Colors.transparent,
+      borderRadius: widget.tileShape == null
+          ? widget.contentBorderRadius ?? BorderRadius.circular(10)
+          : null,
       child: Column(
         children: [
           _buildHeaderSection(),
@@ -268,9 +343,14 @@ class _AnimatedAccordionState extends State<AnimatedAccordion>
             decoration: BoxDecoration(
               color:
                   widget.contentBackgroundColor ?? widget.tileBackgroundColor,
-              shape: BoxShape.rectangle,
-              borderRadius: BorderRadius.circular(10),
+              gradient: widget.contentGradient,
+              border: widget.contentBorder ?? Border.all(color: Colors.grey),
+              image: widget.contentImage,
+              shape: widget.contentShape ?? BoxShape.rectangle,
+              borderRadius:
+                  widget.contentBorderRadius ?? BorderRadius.circular(10),
             ),
+            alignment: widget.contentAlignment ?? Alignment.center,
             child: _buildAnimatedContent(),
           ),
         ],
@@ -281,18 +361,29 @@ class _AnimatedAccordionState extends State<AnimatedAccordion>
   /// Builds the header section of the accordion.
   Widget _buildHeaderSection() {
     return Material(
-      shape: widget.headerShape,
-      elevation: widget.headerElevation ?? 2.0,
-      color: widget.headerBackgroundColor ?? widget.tileBackgroundColor,
-      child: InkWell(
-        onTap: _handleTap,
+      shape: widget.headerShape ??
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+            side: BorderSide(color: Colors.grey),
+          ),
+      elevation: widget.headerElevation ?? 4.0,
+      color: widget.headerBackgroundColor ?? Colors.blue[100],
+      shadowColor: Colors.black,
+      child: Container(
         child: ListTile(
+          onTap: _handleTap,
+          contentPadding: widget.headerPadding,
+          shape: widget.headerShape ??
+              RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+                side: BorderSide(color: Colors.grey),
+              ),
           leading: _isExpanded
               ? widget.expandedHeaderLeading ?? widget.headerLeading
               : widget.headerLeading,
           title: widget.headerCustomWidget ??
               Text(
-                widget.headerTitle,
+                widget.headerTitle ?? 'Accordion',
                 style: widget.headerTitleStyle?.copyWith(
                       color: widget.headerTextColor,
                     ) ??
@@ -351,6 +442,63 @@ class _AnimatedAccordionState extends State<AnimatedAccordion>
           child: child,
         );
         break;
+      case AnimatedAccordionAnimationType.rotate:
+        child = RotationTransition(
+          turns: _fadeAnimations[index],
+          child: child,
+        );
+        break;
+      case AnimatedAccordionAnimationType.fadeScale:
+        child = FadeTransition(
+          opacity: _fadeAnimations[index],
+          child: ScaleTransition(
+            scale: _scaleAnimations[index],
+            child: child,
+          ),
+        );
+        break;
+      case AnimatedAccordionAnimationType.slideFade:
+        child = SlideTransition(
+          position: _slideAnimations[index],
+          child: FadeTransition(
+            opacity: _fadeAnimations[index],
+            child: child,
+          ),
+        );
+        break;
+
+      case AnimatedAccordionAnimationType.flip:
+        child = RotationYTransition(
+          turns: _rotationAnimations[index], // Use the flip animation
+          child: child,
+        );
+        break;
+      case AnimatedAccordionAnimationType.bounce:
+        child = ScaleTransition(
+          scale: _bounceAnimations[index], // Use the bounce animation
+          child: child,
+        );
+        break;
+      case AnimatedAccordionAnimationType.shrink:
+        child = SizeTransition(
+          sizeFactor: _shrinkAnimations[index], // Use the shrink animation
+          child: child,
+        );
+        break;
+      case AnimatedAccordionAnimationType.blur:
+        child = AnimatedBuilder(
+          animation: _blurAnimations[index], // Use the blur animation
+          builder: (context, child) {
+            return BackdropFilter(
+              filter: ImageFilter.blur(
+                  sigmaX: _blurAnimations[index].value,
+                  sigmaY: _blurAnimations[index].value),
+              child: child,
+            );
+          },
+          child: child,
+        );
+        break;
     }
 
     return child;
@@ -367,4 +515,25 @@ enum AnimatedAccordionAnimationType {
 
   /// The content scales in and out.
   scale,
+
+  /// The content rotates in and out.
+  rotate,
+
+  /// The content flips in and out.
+  flip,
+
+  /// The content fades and scales in and out.
+  fadeScale,
+
+  /// The content slides and fades in and out.
+  slideFade,
+
+  /// The content bounces in and out.
+  bounce,
+
+  /// The content shrinks in and out.
+  shrink,
+
+  /// The content blurs in and out.
+  blur,
 }

@@ -5,14 +5,6 @@ The `animated_accordion` package provides an expandable, animated accordion with
 
 ## Features
 
-- **Custom Animations**: Choose from fade, scale, or slide animations.
-- **Customizable Header**: Add icons, titles, or any widget to the header.
-- **Dynamic Content**: Easily insert lists, widgets, or buttons within the content.
-- **Expandable/Collapsible**: Each accordion section can be toggled open or closed, with the option to maintain state.
-- **Custom Styling**: Modify the appearance of the header and content with various background colors, shapes, padding, and elevations.
-
-## Features
-
 - **Multiple animation types**:
   - `fade`
   - `slide`

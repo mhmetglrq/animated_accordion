@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2] - 2024-09-16
+
+### Changed
+- **README Updated**: Refined and enhanced the README documentation for better clarity and user understanding.
+
+---
+
 ## [1.1.1] - 2024-09-16
 
 ### Changed

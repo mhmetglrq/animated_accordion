@@ -1,6 +1,6 @@
 name: animated_accordion
 description: A Flutter package for creating animated expandable accordion-style widgets with multiple animation options.
-version: 1.1.1
+version: 1.1.2
 homepage: https://github.com/mhmetglrq/animated_accordion
 repository: https://github.com/mhmetglrq/animated_accordion
 documentation: https://github.com/mhmetglrq/animated_accordion/wiki

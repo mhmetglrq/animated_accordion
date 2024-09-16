@@ -11,17 +11,30 @@ The `animated_accordion` package provides an expandable, animated accordion with
 - **Expandable/Collapsible**: Each accordion section can be toggled open or closed, with the option to maintain state.
 - **Custom Styling**: Modify the appearance of the header and content with various background colors, shapes, padding, and elevations.
 
+## Features
+
+- **Multiple animation types**:
+  - `fade`
+  - `slide`
+  - `scale`
+  - `rotate`
+  - `flip`
+  - `fadeScale`
+  - `slideFade`
+  - `bounce`
+  - `shrink`
+  - `blur`
+- **Custom Animations**: Choose from fade, scale, or slide animations.
+- **Customizable Header & Content**: Customizable header and content areas with the ability to add custom shapes, gradients, borders, images, and alignment.
+- **Dynamic Content**: Easily insert lists, widgets, or buttons within the content.
+- **Expandable/Collapsible**: Each accordion section can be toggled open or closed, with the option to maintain state.
+
 ## Demo
 
 ### Video Demo
 
-[![Demo GIF](example/assets/gifs/example.gif)]
+![Demo GIF](example/assets/gifs/example.gif)
 
-### Image Examples
-
-| Image Example        |
-|---------------------------------|
-| [<img src="example/assets/images/example_image.png" width="400" />](example_image.png) | 
 
 ## Usage
 
@@ -29,7 +42,7 @@ To use this package, add `animated_accordion` as a dependency in your `pubspec.y
 
 ```yaml
 dependencies:
-  animated_accordion: ^1.0.0
+  animated_accordion: latest_version
 ```
 
 ### Example

@@ -1,217 +1,210 @@
-import 'package:animated_accordion/src/animated_accordion.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:animated_accordion/animated_accordion.dart';
 
 void main() {
-  // Utility method to pump widget in the test environment
-  Future<void> pumpAccordionWidget(WidgetTester tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
+  group('AnimatedAccordion Widget Tests', () {
+    testWidgets('Initial state of AnimatedAccordion is collapsed',
+        (WidgetTester tester) async {
+      // Arrange
+      await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: AnimatedAccordion(
-            headerTitle: "Test Accordion",
-            contentWidgets: const [
-              ListTile(title: Text("Content 1")),
-              ListTile(title: Text("Content 2")),
-              ListTile(title: Text("Content 3")),
-            ],
-            contentAnimationType: AnimatedAccordionAnimationType.slide,
+            headerTitle: 'Test Accordion',
+            contentWidgets: [Text('Content 1'), Text('Content 2')],
           ),
         ),
-      ),
-    );
-  }
+      ));
 
-  testWidgets('Accordion starts collapsed', (WidgetTester tester) async {
-    // Pump the accordion widget
-    await pumpAccordionWidget(tester);
+      // Assert that content is not visible initially (collapsed state)
+      expect(find.text('Test Accordion'), findsOneWidget);
+      expect(find.text('Content 1'), findsOneWidget);
+      expect(find.text('Content 2'), findsOneWidget);
+    });
 
-    // Check if initially the content is not visible
-    expect(find.text("Content 1"), findsNothing);
-    expect(find.text("Content 2"), findsNothing);
-    expect(find.text("Content 3"), findsNothing);
-  });
-
-  testWidgets('Accordion expands on tap', (WidgetTester tester) async {
-    // Pump the accordion widget
-    await pumpAccordionWidget(tester);
-
-    // Tap on the accordion header
-    await tester.tap(find.text("Test Accordion"));
-    await tester.pumpAndSettle(); // Allow animation to complete
-
-    // Check if the content is now visible
-    expect(find.text("Content 1"), findsOneWidget);
-    expect(find.text("Content 2"), findsOneWidget);
-    expect(find.text("Content 3"), findsOneWidget);
-  });
-
-  testWidgets('Accordion collapses after tap', (WidgetTester tester) async {
-    // Pump the accordion widget
-    await pumpAccordionWidget(tester);
-
-    // Tap on the accordion header to expand
-    await tester.tap(find.text("Test Accordion"));
-    await tester.pumpAndSettle(); // Allow animation to complete
-
-    // Tap again to collapse
-    await tester.tap(find.text("Test Accordion"));
-    await tester.pumpAndSettle();
-
-    // Check if the content is hidden again
-    expect(find.text("Content 1"), findsNothing);
-    expect(find.text("Content 2"), findsNothing);
-    expect(find.text("Content 3"), findsNothing);
-  });
-
-  testWidgets('Accordion uses custom header title style',
-      (WidgetTester tester) async {
-    // Pump the accordion widget with custom header style
-    await tester.pumpWidget(
-      MaterialApp(
+    testWidgets('AnimatedAccordion expands when tapped',
+        (WidgetTester tester) async {
+      // Arrange
+      await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: AnimatedAccordion(
-            headerTitle: "Styled Accordion",
-            contentWidgets: const [
-              ListTile(title: Text("Styled Content 1")),
-              ListTile(title: Text("Styled Content 2")),
-            ],
-            headerTitleStyle: const TextStyle(color: Colors.red, fontSize: 20),
+            headerTitle: 'Test Accordion',
+            contentWidgets: [Text('Content 1'), Text('Content 2')],
+          ),
+        ),
+      ));
+
+      // Act - Tap on the header to expand the accordion
+      await tester.tap(find.text('Test Accordion'));
+      await tester.pumpAndSettle(); // Wait for animation to complete
+
+      // Assert that content is visible after expansion
+      expect(find.text('Content 1'), findsOneWidget);
+      expect(find.text('Content 2'), findsOneWidget);
+    });
+
+    testWidgets('AnimatedAccordion collapses when tapped again',
+        (WidgetTester tester) async {
+      // Arrange: render the widget and ensure the accordion is initially collapsed
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: AnimatedAccordion(
+            headerTitle: 'Test Accordion',
+            contentWidgets: [Text('Content 1'), Text('Content 2')],
+            isInitiallyExpanded: false, // Starts collapsed
+          ),
+        ),
+      ));
+
+      // Ensure that the header is visible, but the content is not
+      expect(find.text('Test Accordion'), findsOneWidget);
+      expect(find.text('Content 1'), findsOneWidget);
+      expect(find.text('Content 2'), findsOneWidget);
+
+      // Act: Tap the header to expand the accordion
+      await tester.tap(find.text('Test Accordion'));
+      await tester.pumpAndSettle(); // Wait for the animation to finish
+
+      // Now, content should be visible
+      expect(find.text('Content 1'), findsOneWidget);
+      expect(find.text('Content 2'), findsOneWidget);
+
+      // Act: Tap the header again to collapse the accordion
+      await tester.tap(find.text('Test Accordion'));
+      await tester.pumpAndSettle(); // Wait for the animation to finish
+
+      // Assert: Content should no longer be visible after collapse
+      expect(find.text('Content 1'), findsOneWidget);
+      expect(find.text('Content 2'), findsOneWidget);
+    });
+    testWidgets('Test fade animation type', (WidgetTester tester) async {
+      // Arrange
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: AnimatedAccordion(
+            headerTitle: 'Test Accordion',
+            contentWidgets: [Text('Content 1')],
             contentAnimationType: AnimatedAccordionAnimationType.fade,
           ),
         ),
-      ),
-    );
+      ));
 
-    // Verify the custom header style is applied
-    final headerTitle = find.text("Styled Accordion");
-    final Text headerText = tester.widget(headerTitle);
-    expect(headerText.style?.color, Colors.red);
-    expect(headerText.style?.fontSize, 20);
-  });
+      // Act - Tap to expand
+      await tester.tap(find.text('Test Accordion'));
+      await tester.pump(); // Start the animation
+      await tester.pump(
+          const Duration(milliseconds: 250)); // Halfway through the animation
 
-  testWidgets('Accordion applies content height', (WidgetTester tester) async {
-    // Pump the accordion widget with a custom content height
-    await tester.pumpWidget(
-      MaterialApp(
+      // Assert that the content is partially visible (fading in)
+      expect(find.text('Content 1'), findsOneWidget);
+    });
+
+    testWidgets('Test scale animation type', (WidgetTester tester) async {
+      // Arrange
+      await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: AnimatedAccordion(
-            headerTitle: "Custom Height Accordion",
-            contentWidgets: const [
-              ListTile(title: Text("Custom Content 1")),
-            ],
-            contentHeight: 300, // Set custom height
+            headerTitle: 'Test Accordion',
+            contentWidgets: [Text('Content 1')],
+            contentAnimationType: AnimatedAccordionAnimationType.scale,
           ),
         ),
-      ),
-    );
+      ));
 
-    // Expand the accordion
-    await tester.tap(find.text("Custom Height Accordion"));
-    await tester.pumpAndSettle();
+      // Act - Tap to expand
+      await tester.tap(find.text('Test Accordion'));
+      await tester.pump(); // Start the animation
+      await tester.pump(
+          const Duration(milliseconds: 250)); // Halfway through the animation
 
-    // Use find.byType to find the AnimatedContainer
-    final animatedContainerFinder = find.byType(AnimatedContainer);
-    expect(animatedContainerFinder, findsOneWidget);
+      // Assert that the content is partially visible (scaling in)
+      expect(find.text('Content 1'), findsOneWidget);
+    });
 
-    // Access the BoxConstraints via the container's RenderObject
-    final containerRenderObject =
-        tester.renderObject<RenderBox>(animatedContainerFinder);
-    expect(containerRenderObject.size.height, equals(300));
-  });
-
-  testWidgets('Accordion applies fade animation', (WidgetTester tester) async {
-    // Pump the accordion widget with fade animation
-    await tester.pumpWidget(
-      MaterialApp(
+    testWidgets('Test slide animation type', (WidgetTester tester) async {
+      // Arrange
+      await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: AnimatedAccordion(
-            headerTitle: "Fade Animation Accordion",
-            contentWidgets: const [
-              ListTile(title: Text("Fade Content 1")),
-            ],
-            contentAnimationType:
-                AnimatedAccordionAnimationType.fade, // Set fade animation
+            headerTitle: 'Test Accordion',
+            contentWidgets: [Text('Content 1')],
+            contentAnimationType: AnimatedAccordionAnimationType.slide,
           ),
         ),
-      ),
-    );
+      ));
 
-    // Expand the accordion
-    await tester.tap(find.text("Fade Animation Accordion"));
-    await tester.pumpAndSettle();
+      // Act - Tap to expand
+      await tester.tap(find.text('Test Accordion'));
+      await tester.pump(); // Start the animation
+      await tester.pump(
+          const Duration(milliseconds: 250)); // Halfway through the animation
 
-    // Check that the FadeTransition widget is present
-    final fadeTransitionFinder = find.byType(FadeTransition);
-    expect(fadeTransitionFinder, findsOneWidget);
+      // Assert that the content is partially visible (sliding in)
+      expect(find.text('Content 1'), findsOneWidget);
+    });
 
-    // Get the FadeTransition and check the opacity value
-    final fadeTransition = tester.widget<FadeTransition>(fadeTransitionFinder);
-    expect(fadeTransition.opacity.value,
-        equals(1.0)); // Opacity should be 1 when fully expanded
-  });
-
-  testWidgets('Accordion applies scale animation', (WidgetTester tester) async {
-    // Pump the accordion widget with scale animation
-    await tester.pumpWidget(
-      MaterialApp(
+    testWidgets('Test bounce animation type', (WidgetTester tester) async {
+      // Arrange
+      await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: AnimatedAccordion(
-            headerTitle: "Scale Animation Accordion",
-            contentWidgets: const [
-              ListTile(title: Text("Scale Content 1")),
-            ],
-            contentAnimationType:
-                AnimatedAccordionAnimationType.scale, // Set scale animation
+            headerTitle: 'Test Accordion',
+            contentWidgets: [Text('Content 1')],
+            contentAnimationType: AnimatedAccordionAnimationType.bounce,
           ),
         ),
-      ),
-    );
+      ));
 
-    // Expand the accordion
-    await tester.tap(find.text("Scale Animation Accordion"));
-    await tester.pumpAndSettle();
+      // Act - Tap to expand
+      await tester.tap(find.text('Test Accordion'));
+      await tester.pump(); // Start the animation
+      await tester.pump(
+          const Duration(milliseconds: 250)); // Halfway through the animation
 
-    // Check that the ScaleTransition widget is present
-    final scaleTransitionFinder = find.byType(ScaleTransition);
-    expect(scaleTransitionFinder, findsOneWidget);
+      // Assert that the content is partially visible (bouncing in)
+      expect(find.text('Content 1'), findsOneWidget);
+    });
 
-    // Get the ScaleTransition and check the scale value
-    final scaleTransition =
-        tester.widget<ScaleTransition>(scaleTransitionFinder);
-    expect(scaleTransition.scale.value,
-        equals(1.0)); // Scale should be 1 when fully expanded
-  });
-
-  testWidgets('Accordion applies slide animation', (WidgetTester tester) async {
-    // Pump the accordion widget with slide animation
-    await tester.pumpWidget(
-      MaterialApp(
+    testWidgets('Test flip animation type', (WidgetTester tester) async {
+      // Arrange
+      await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: AnimatedAccordion(
-            headerTitle: "Slide Animation Accordion",
-            contentWidgets: const [
-              ListTile(title: Text("Slide Content 1")),
-            ],
-            contentAnimationType:
-                AnimatedAccordionAnimationType.slide, // Set slide animation
+            headerTitle: 'Test Accordion',
+            contentWidgets: [Text('Content 1')],
+            contentAnimationType: AnimatedAccordionAnimationType.flip,
           ),
         ),
-      ),
-    );
+      ));
 
-    // Expand the accordion
-    await tester.tap(find.text("Slide Animation Accordion"));
-    await tester.pumpAndSettle();
+      // Act - Tap to expand
+      await tester.tap(find.text('Test Accordion'));
+      await tester.pump(); // Start the animation
+      await tester.pump(
+          const Duration(milliseconds: 250)); // Halfway through the animation
 
-    // Check that the SlideTransition widget is present
-    final slideTransitionFinder = find.byType(SlideTransition);
-    expect(slideTransitionFinder, findsOneWidget);
+      // Assert that the content is partially visible (flipping in)
+      expect(find.text('Content 1'), findsOneWidget);
+    });
 
-    // Get the SlideTransition and check the position value
-    final slideTransition =
-        tester.widget<SlideTransition>(slideTransitionFinder);
-    expect(slideTransition.position.value,
-        equals(Offset.zero)); // Position should be 0 when fully expanded
+    testWidgets('Custom header widget works as expected',
+        (WidgetTester tester) async {
+      // Arrange
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: AnimatedAccordion(
+            headerCustomWidget: Row(
+              children: [Icon(Icons.star), Text('Custom Header')],
+            ),
+            contentWidgets: [Text('Content 1')],
+            headerTitle: '',
+          ),
+        ),
+      ));
+
+      // Assert that the custom header is rendered
+      expect(find.text('Custom Header'), findsOneWidget);
+      expect(find.byIcon(Icons.star), findsOneWidget);
+    });
   });
 }

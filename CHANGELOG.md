@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1] - 2024-09-16
+
+### Changed
+- **API Reference**: Updated the API reference documentation for clarity and consistency.
+
+---
+
 ## [1.1.0] - 2024-09-16
 
 ### Added

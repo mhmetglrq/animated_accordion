@@ -1,5 +1,6 @@
 library animated_accordion;
 
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:animated_accordion/extensions/context_extensions.dart';
@@ -141,6 +142,28 @@ class AnimatedAccordion extends StatefulWidget {
 
   /// The shape (e.g., rounded corners) of the content area.
   final BoxShape? contentShape;
+
+  /// The duration for the auto-expand feature.
+  final Duration? autoExpandDuration;
+
+  /// The duration for the auto-collapse feature.
+  final Duration? autoCollapseDuration;
+
+  /// Determines if the content area is scrollable.
+  final bool isScrollable;
+
+  /// Creates a new `AnimatedAccordion` widget with the given parameters.
+  /// The `contentWidgets` parameter is required and must not be null.
+  /// The `contentAnimationType` defaults to `AnimatedAccordionAnimationType.fade`.
+  /// The `contentOpenAnimationCurve` defaults to `Curves.easeIn`.
+  /// The `contentCloseAnimationCurve` defaults to `Curves.easeOut`.
+  /// The `isInitiallyExpanded` defaults to `false`.
+  /// The `isScrollable` defaults to `true`.
+  /// The `maintainState` defaults to `false`.
+  /// The `clipBehavior` defaults to `Clip.none`.
+  /// The `tilePaddingCollapsed` defaults to `true`.
+  /// The `tilePaddingExpanded` defaults to `true`.
+
   const AnimatedAccordion({
     super.key,
     this.headerTitle,
@@ -181,6 +204,9 @@ class AnimatedAccordion extends StatefulWidget {
     this.maintainState = false,
     this.tilePaddingCollapsed = true,
     this.tilePaddingExpanded = true,
+    this.autoExpandDuration,
+    this.autoCollapseDuration,
+    this.isScrollable = true,
   });
 
   @override
@@ -191,6 +217,8 @@ class _AnimatedAccordionState extends State<AnimatedAccordion>
     with SingleTickerProviderStateMixin {
   late bool _isExpanded;
   late AnimationController _controller;
+  Timer? _expandTimer;
+  Timer? _collapseTimer;
   late List<Animation<double>> _fadeAnimations;
   late List<Animation<Offset>> _slideAnimations;
   late List<Animation<double>> _scaleAnimations;
@@ -214,12 +242,42 @@ class _AnimatedAccordionState extends State<AnimatedAccordion>
     if (_isExpanded) {
       _controller.value = 1.0;
     }
+
+    if (widget.autoExpandDuration != null) {
+      _startAutoExpandTimer();
+    }
+
+    if (widget.autoCollapseDuration != null) {
+      _startAutoCollapseTimer();
+    }
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _expandTimer?.cancel();
+    _collapseTimer?.cancel();
     super.dispose();
+  }
+
+  /// Starts the timer for auto-expanding the accordion.
+  void _startAutoExpandTimer() {
+    _expandTimer = Timer(widget.autoExpandDuration!, () {
+      setState(() {
+        _isExpanded = true;
+        _controller.forward();
+      });
+    });
+  }
+
+  /// Starts the timer for auto-collapsing the accordion.
+  void _startAutoCollapseTimer() {
+    _collapseTimer = Timer(widget.autoCollapseDuration!, () {
+      setState(() {
+        _isExpanded = false;
+        _controller.reverse();
+      });
+    });
   }
 
   /// Handles the tap event for expanding or collapsing the accordion.
@@ -408,6 +466,9 @@ class _AnimatedAccordionState extends State<AnimatedAccordion>
   /// Builds the animated content area of the accordion.
   Widget _buildAnimatedContent() {
     return SingleChildScrollView(
+      physics: widget.isScrollable
+          ? ScrollPhysics()
+          : NeverScrollableScrollPhysics(),
       child: Column(
         children: List.generate(widget.contentWidgets.length, (index) {
           return _buildAnimatedItem(index);
@@ -419,7 +480,7 @@ class _AnimatedAccordionState extends State<AnimatedAccordion>
   /// Builds each individual animated content item based on the animation type.
   Widget _buildAnimatedItem(int index) {
     Widget child = Padding(
-      padding: EdgeInsets.only(top: 10 + index * 3),
+      padding: EdgeInsets.only(top: 10),
       child: widget.contentWidgets[index],
     );
 

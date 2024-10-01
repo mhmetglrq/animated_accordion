@@ -33,6 +33,7 @@ class ExampleScreen extends StatelessWidget {
       children: [
         const AnimatedAccordion(
           headerTitle: "Default Accordion",
+          isScrollable: false,
           contentWidgets: [
             ListTile(title: Text("Content 1")),
             ListTile(title: Text("Content 2")),
@@ -44,6 +45,7 @@ class ExampleScreen extends StatelessWidget {
         const SizedBox(height: 20), // Adds space between tiles
         // Slide Animation Tile
         AnimatedAccordion(
+          autoExpandDuration: const Duration(seconds: 5),
           headerTextAlign: TextAlign.center,
           headerTitle: "Slide Animation Title", // The title of the header
           headerTextColor: Colors.black54, // Text color for the header
@@ -100,6 +102,8 @@ class ExampleScreen extends StatelessWidget {
           headerShape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ), // The shape of the header with rounded corners
+
+          autoCollapseDuration: const Duration(seconds: 5),
           contentWidgets: [
             // Content shown when the tile is expanded
             const ListTile(
@@ -130,7 +134,7 @@ class ExampleScreen extends StatelessWidget {
             fontWeight: FontWeight.bold,
             color: Colors.black,
           ), // Styling for the header title
-          isInitiallyExpanded: true,
+          isInitiallyExpanded: false,
           animationDuration:
               const Duration(milliseconds: 700), // Duration of the animation
         ),

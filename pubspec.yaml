@@ -11,6 +11,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  sentry: ^8.9.0
+  sentry_dio: ^8.9.0
 
 dev_dependencies:
   flutter_test:

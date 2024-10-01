@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:animated_accordion/animated_accordion.dart';
 
 void main() {
-  group('AnimatedAccordion Widget Tests', () {
+  Future<void> loadTestAssets() async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    await rootBundle.load(
+        'assets/images/bg_image.jpg'); // Testlerde kullanılan varlıkları yükleyin
+  }
+
+  group('AnimatedAccordion General Behavior Tests', () {
     testWidgets('Initial state of AnimatedAccordion is collapsed',
         (WidgetTester tester) async {
       // Arrange
@@ -77,6 +84,9 @@ void main() {
       expect(find.text('Content 1'), findsOneWidget);
       expect(find.text('Content 2'), findsOneWidget);
     });
+  });
+
+  group('AnimatedAccordion Animation Type Tests', () {
     testWidgets('Test fade animation type', (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(MaterialApp(
@@ -186,7 +196,9 @@ void main() {
       // Assert that the content is partially visible (flipping in)
       expect(find.text('Content 1'), findsOneWidget);
     });
+  });
 
+  group('AnimatedAccordion Special Features Tests', () {
     testWidgets('Custom header widget works as expected',
         (WidgetTester tester) async {
       // Arrange
@@ -205,6 +217,112 @@ void main() {
       // Assert that the custom header is rendered
       expect(find.text('Custom Header'), findsOneWidget);
       expect(find.byIcon(Icons.star), findsOneWidget);
+    });
+
+    testWidgets('Accordion content is scrollable when isScrollable is true',
+        (WidgetTester tester) async {
+      // Arrange
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: AnimatedAccordion(
+            headerTitle: 'Test Accordion',
+            contentWidgets: List<Widget>.generate(
+                20, (index) => ListTile(title: Text('Item $index'))),
+            isScrollable: true,
+          ),
+        ),
+      ));
+
+      // Act - Tap to expand
+      await tester.tap(find.text('Test Accordion'));
+      await tester.pumpAndSettle();
+
+      // Assert that content is scrollable
+      final scrollable = find.byType(Scrollable);
+      expect(scrollable, findsOneWidget);
+
+      // Check if scrolling is enabled
+      await tester.drag(scrollable, const Offset(0, -300)); // Scroll down
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('Auto-expand works correctly after a delay',
+        (WidgetTester tester) async {
+      // Arrange
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: AnimatedAccordion(
+            headerTitle: 'Test Accordion',
+            contentWidgets: [Text('Content 1')],
+            autoExpandDuration: const Duration(seconds: 1),
+          ),
+        ),
+      ));
+
+      // Assert that initially it is collapsed
+      expect(find.text('Content 1'), findsOneWidget);
+
+      // Act - Wait for the auto-expand duration
+      await tester.pumpAndSettle(
+          const Duration(milliseconds: 1500)); // Bekleme süresini artırın
+
+      // Assert that the accordion expanded automatically
+      expect(find.text('Content 1'), findsOneWidget);
+    });
+
+    testWidgets('Auto-collapse works correctly after a delay',
+        (WidgetTester tester) async {
+      // Arrange
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: AnimatedAccordion(
+            headerTitle: 'Test Accordion',
+            contentWidgets: [Text('Content 1')],
+            isInitiallyExpanded: true,
+            autoCollapseDuration: const Duration(seconds: 1),
+          ),
+        ),
+      ));
+
+      // Assert that initially it is expanded
+      expect(find.text('Content 1'), findsOneWidget);
+
+      // Act - Wait for the auto-collapse duration
+      await tester.pumpAndSettle(const Duration(seconds: 1));
+
+      // Assert that the accordion collapsed automatically
+      expect(find.text('Content 1'), findsOneWidget);
+    });
+
+    testWidgets('Test gradient and background image is applied correctly',
+        (WidgetTester tester) async {
+      // Arrange: asset varlıklarını yüklüyoruz
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: AnimatedAccordion(
+            headerTitle: 'Test Accordion',
+            contentWidgets: [Text('Content 1')],
+            contentGradient: LinearGradient(colors: [Colors.red, Colors.blue]),
+            contentImage: DecorationImage(
+              image: AssetImage('assets/images/bg_image.jpg'),
+            ),
+          ),
+        ),
+      ));
+
+      // Act - Expand the accordion
+      await tester.tap(find.text('Test Accordion'));
+      await tester.pumpAndSettle();
+
+      // Assert that the accordion has gradient and image applied
+      final container = tester.widget<Container>(find.descendant(
+        of: find.byType(AnimatedAccordion),
+        matching: find.byType(Container),
+      ));
+      final BoxDecoration? decoration = container.decoration as BoxDecoration?;
+
+      expect(decoration?.gradient, isNotNull); // Gradient var mı kontrol et
+      expect(decoration?.image, isNotNull); // Image var mı kontrol et
     });
   });
 }
